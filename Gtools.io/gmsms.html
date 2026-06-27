@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTOOLS // PIXEL EDITION V4.0</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.10.0/ethers.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050505; --panel-bg: #0a0a0a; --primary: #00ffcc;
+            --primary-dim: rgba(0, 255, 204, 0.2); --secondary: #ff00ff;
+            --text-main: #e0e0e0; --text-muted: #666666; --error: #ff3333;
+            --success: #33ff33; --border-width: 3px; --warning: #ffff00;
+        }
+
+        body::after {
+            content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2; background-size: 100% 2px, 3px 100%; pointer-events: none;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg-color); color: var(--text-main); font-family: 'VT323', monospace; padding: 20px; font-size: 18px; text-transform: uppercase; }
+        h1, h2, h3 { font-family: 'Press Start 2P', cursive; }
+        .container { max-width: 1000px; margin: 0 auto; position: relative; z-index: 3; }
+
+        header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: var(--border-width) dashed var(--primary); }
+        header h1 { color: var(--primary); font-size: 24px; text-shadow: 2px 2px 0px #005544; margin-bottom: 10px; }
+        header p { color: var(--secondary); font-size: 14px; letter-spacing: 2px;}
+
+        .panel { background: var(--panel-bg); border: var(--border-width) solid var(--text-muted); padding: 20px; margin-bottom: 20px; box-shadow: 6px 6px 0px #111; position: relative; }
+        .panel::before { content: ''; position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px; border: 1px solid #333; z-index: -1; }
+        h2 { font-size: 14px; color: var(--primary); margin-bottom: 20px; text-shadow: 1px 1px 0px #000; }
+
+        label { display: block; margin-bottom: 8px; color: var(--text-main); font-size: 16px; }
+        input, select, textarea { width: 100%; background: #000; border: 2px solid var(--text-muted); color: var(--primary); padding: 10px; margin-bottom: 15px; font-family: 'VT323', monospace; font-size: 18px; outline: none; text-transform: none; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 8px var(--primary-dim); }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        
+        button { width: 100%; background: var(--primary); color: #000; font-family: 'Press Start 2P', cursive; font-size: 10px; padding: 15px; border: none; cursor: pointer; box-shadow: 4px 4px 0px #007755; transition: all 0.1s; margin-top: 10px; }
+        button:hover { background: #33ffdd; }
+        button:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px #007755; }
+        button.btn-sell { background: var(--secondary); box-shadow: 4px 4px 0px #770077; color: white; margin-top: 5px; padding: 10px;}
+        button.btn-sell:hover { background: #ff55ff; }
+
+        .terminal { background: #000; padding: 15px; border: 2px solid var(--text-muted); height: 200px; overflow-y: auto; font-family: 'VT323', monospace; font-size: 18px; text-transform: none; }
+        .log-info { color: #aaaaaa; } .log-err { color: var(--error); } .log-suc { color: var(--success); } .log-sys { color: var(--secondary); } .log-warn { color: var(--warning); }
+
+        /* NFT INVENTORY STYLES */
+        .inventory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; max-height: 400px; overflow-y: auto; padding-right: 10px; }
+        .nft-card { background: #111; border: 2px solid var(--border-color, var(--text-muted)); padding: 10px; display: flex; flex-direction: column; }
+        .nft-img { width: 100%; height: 180px; object-fit: cover; border: 2px solid #333; margin-bottom: 10px; background: #000; }
+        .nft-title { font-size: 14px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;}
+        .nft-stat { font-size: 12px; color: var(--primary); display: flex; justify-content: space-between; margin-bottom: 3px; }
+        .nft-stat span.val { color: #fff; }
+        
+        ::-webkit-scrollbar { width: 12px; }
+        ::-webkit-scrollbar-track { background: #000; border-left: 2px solid #333; }
+        ::-webkit-scrollbar-thumb { background: var(--primary); }
+
+        #walletInfo { margin-top: 10px; color: var(--success); font-size: 20px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>GTOOLS // WEB3 TERMINAL</h1>
+        <p>HIGH-END PIXEL EDITION - V4.0 (WITH ASSET MANAGER)</p>
+    </header>
+
+    <!-- MODULE 01: NETWORK & WALLET -->
+    <div class="panel">
+        <h2>> MODULE_01: NETWORK & WALLET</h2>
+        <div class="grid-2">
+            <div>
+                <label>SELECT CHAIN</label>
+                <select id="networkSelect" onchange="updateRpc()">
+                    <option value="mainnet|https://eth.drpc.org|api.etherscan.io|api.reservoir.tools">ETH MAINNET</option>
+                    <option value="base|https://mainnet.base.org|api.basescan.org|api-base.reservoir.tools">BASE MAINNET</option>
+                    <option value="arbitrum|https://arb1.arbitrum.io/rpc|api.arbiscan.io|api-arbitrum.reservoir.tools">ARBITRUM ONE</option>
+                </select>
+            </div>
+            <div>
+                <label>BURNER PRIVATE KEY</label>
+                <input type="password" id="pkInput" placeholder="0x..." onchange="loadWallet()">
+            </div>
+        </div>
+        <div id="walletInfo">[ NO WALLET CONNECTED ]</div>
+    </div>
+
+    <!-- MODULE 02: INVENTORY & OFFERS (NEW) -->
+    <div class="panel" id="inventoryModule" style="display:none;">
+        <h2>> MODULE_02: WALLET INVENTORY & OFFERS</h2>
+        <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 15px;">
+            <label id="invStatus">SCANNING BLOCKCHAIN FOR ASSETS...</label>
+            <button onclick="fetchInventory()" style="width: 150px; margin: 0; padding: 10px;">REFRESH</button>
+        </div>
+        <div class="inventory-grid" id="inventoryGrid">
+            <!-- NFTs will populate here -->
+        </div>
+    </div>
+
+    <!-- MODULE 03: CONTRACT SCANNER -->
+    <div class="panel">
+        <h2>> MODULE_03: CONTRACT SCANNER & MINT</h2>
+        <label>TARGET CONTRACT (0x...)</label>
+        <div class="grid-2" style="grid-template-columns: 3fr 1fr;">
+            <input type="text" id="targetInput" placeholder="0x..." style="margin-bottom: 0;">
+            <button onclick="analyzeContract()" style="margin-top: 0;">SCAN TX</button>
+        </div>
+        <div style="margin-top: 15px;">
+            <label>TARGET FUNCTION</label>
+            <input type="text" id="mintFuncSelect" value="mint(uint256)" placeholder="e.g. mint(uint256)">
+        </div>
+        <div class="grid-2" style="margin-top: 15px;">
+            <div>
+                <label>QTY</label>
+                <input type="number" id="mintQuantity" value="1" min="1">
+            </div>
+            <div>
+                <label>PRICE(ETH)</label>
+                <input type="text" id="mintPrice" value="0" placeholder="0.0">
+            </div>
+        </div>
+        <button onclick="executeMint()">EXECUTE MINT PAYLOAD</button>
+    </div>
+
+    <!-- TERMINAL -->
+    <div class="panel">
+        <h2>> SYSTEM LOGS</h2>
+        <div class="terminal" id="logger">
+            <div class="log-sys">GTOOLS OS v4.0 BOOT SEQUENCE INITIATED...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let provider, wallet, targetAddress, contractABI;
+    let apiDomain = "api.etherscan.io";
+    let reservoirDomain = "api.reservoir.tools";
+
+    function log(msg, type='info') {
+        const el = document.getElementById('logger');
+        const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
+        el.innerHTML += `<div class="log-${type}">[${timestamp}] ${msg}</div>`;
+        el.scrollTop = el.scrollHeight;
+    }
+
+    function updateRpc() {
+        const val = document.getElementById('networkSelect').value.split('|');
+        provider = new ethers.JsonRpcProvider(val[1]);
+        apiDomain = val[2];
+        reservoirDomain = val[3];
+        log(`UPLINK SWITCHED TO: ${val[0].toUpperCase()}`, 'sys');
+        if(document.getElementById('pkInput').value) loadWallet();
+    }
+    updateRpc(); 
+
+    async function loadWallet() {
+        let pk = document.getElementById('pkInput').value.trim();
+        if(!pk.startsWith('0x') && pk.length === 64) pk = '0x'+pk;
+        
+        try {
+            wallet = new ethers.Wallet(pk, provider);
+            log(`AUTHENTICATING KEY...`, 'info');
+            const bal = ethers.formatEther(await provider.getBalance(wallet.address));
+            document.getElementById('walletInfo').innerHTML = `> ACTIVE: ${wallet.address.substring(0,8)}... | BAL: ${parseFloat(bal).toFixed(4)} ETH`;
+            log(`ACCESS GRANTED.`, 'suc');
+            
+            // Show inventory module and fetch assets
+            document.getElementById('inventoryModule').style.display = 'block';
+            fetchInventory();
+        } catch(e) { 
+            document.getElementById('walletInfo').innerHTML = `[ KEY REJECTED ]`;
+            log('ERR: INVALID PRIVATE KEY FORMAT.', 'err'); 
+        }
+    }
+
+    // --- NEW: FETCH INVENTORY AND OFFERS ---
+    async function fetchInventory() {
+        if(!wallet) return;
+        const grid = document.getElementById('inventoryGrid');
+        const status = document.getElementById('invStatus');
+        grid.innerHTML = '';
+        status.innerText = 'FETCHING TOKENS FROM RESERVOIR INDEXER...';
+        log('INITIATING ASSET SCAN...', 'sys');
+
+        try {
+            const url = `https://${reservoirDomain}/users/${wallet.address}/tokens/v10?limit=20`;
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if(!data.tokens || data.tokens.length === 0) {
+                status.innerText = '[ NO ASSETS FOUND IN WALLET ]';
+                log('SCAN COMPLETE: 0 ASSETS DETECTED.', 'warn');
+                return;
+            }
+
+            status.innerText = `[ DETECTED ${data.tokens.length} ASSETS ]`;
+            log(`SCAN COMPLETE: FOUND ${data.tokens.length} ASSETS.`, 'suc');
+
+            data.tokens.forEach(item => {
+                const t = item.token;
+                const topBid = item.token.topBid?.price?.amount?.native || 0;
+                const floor = item.token.collection?.floorAskPrice?.amount?.native || 'N/A';
+                const image = t.image || 'https://via.placeholder.com/150/000000/00ffcc?text=NO+IMAGE';
+                const contractStr = `${t.contract}:${t.tokenId}`;
+                
+                // Determine CSS colors based on offers
+                let borderColor = '#666';
+                let hasOffer = false;
+                if(topBid > 0) { borderColor = '#00ffcc'; hasOffer = true; }
+
+                let cardHTML = `
+                    <div class="nft-card" style="--border-color: ${borderColor}">
+                        <img src="${image}" class="nft-img" alt="NFT">
+                        <div class="nft-title">${t.name || ('Token #'+t.tokenId)}</div>
+                        <div class="nft-stat">FLOOR: <span class="val">${floor} Ξ</span></div>
+                        <div class="nft-stat" style="color:var(${hasOffer?'--success':'--text-muted'})">
+                            TOP BID: <span class="val">${topBid > 0 ? topBid : 'NONE'} ${topBid > 0 ? 'Ξ' : ''}</span>
+                        </div>
+                `;
+
+                if(hasOffer) {
+                    cardHTML += `<button class="btn-sell" onclick="acceptOffer('${t.contract}', '${t.tokenId}')">ACCEPT OFFER</button>`;
+                }
+
+                cardHTML += `</div>`;
+                grid.innerHTML += cardHTML;
+            });
+
+        } catch(e) {
+            status.innerText = '[ ASSET SCAN FAILED ]';
+            log(`ERR: RESERVOIR API FAILED - ${e.message}`, 'err');
+        }
+    }
+
+    // --- NEW: ACCEPT OFFER (REAL TRANSACTION EXECUTION) ---
+    async function acceptOffer(contractAddress, tokenId) {
+        if(!wallet) return;
+        const tokenStr = `${contractAddress}:${tokenId}`;
+        log(`INITIATING SELL PROTOCOL FOR ${tokenStr}...`, 'sys');
+        
+        try {
+            // 1. Fetch exact transaction execution steps from Reservoir
+            const url = `https://${reservoirDomain}/execute/sell/v7`;
+            const payload = {
+                items: [{ token: tokenStr, quantity: 1 }],
+                taker: wallet.address
+            };
+
+            log('FETCHING SIGNATURE & TX DATA FROM ROUTER...', 'info');
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'accept': '*/*' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+
+            if(data.error) throw new Error(data.error || 'API Rejected Request');
+            if(!data.steps) throw new Error('No execution steps returned');
+
+            // 2. Loop through execution steps (e.g., Approval -> Sell)
+            for(let i=0; i<data.steps.length; i++) {
+                const step = data.steps[i];
+                if(step.items && step.items.length > 0) {
+                    for(let j=0; j<step.items.length; j++) {
+                        const item = step.items[j];
+                        
+                        if(item.status === 'incomplete' && item.data) {
+                            log(`EXECUTING STEP: ${step.id.toUpperCase()}...`, 'warn');
+                            
+                            // Sign and send the transaction using ethers.js
+                            const txData = {
+                                to: item.data.to,
+                                data: item.data.data,
+                                value: item.data.value || 0
+                            };
+                            
+                            const txResponse = await wallet.sendTransaction(txData);
+                            log(`TX BROADCASTED -> HASH: ${txResponse.hash}`, 'suc');
+                            
+                            log(`AWAITING BLOCK CONFIRMATION...`, 'info');
+                            const receipt = await txResponse.wait();
+                            log(`STEP COMPLETE IN BLOCK ${receipt.blockNumber}!`, 'suc');
+                        }
+                    }
+                }
+            }
+            
+            log('OFFER ACCEPTED SUCCESSFULLY! ASSET SOLD.', 'suc');
+            fetchInventory(); // Refresh UI after sale
+
+        } catch(e) {
+            log(`SELL PROTOCOL ABORTED: ${e.message}`, 'err');
+        }
+    }
+
+    // --- MODULE 03: ORIGINAL SCAN & MINT LOGIC ---
+    async function analyzeContract() {
+        targetAddress = document.getElementById('targetInput').value.trim();
+        if(!/^0x[a-fA-F0-9]{40}$/.test(targetAddress)) return log('ERR: INVALID TARGET 0x ADDRESS', 'err');
+        log(`SCANNING CONTRACT -> ${targetAddress}...`, 'info');
+
+        try {
+            const res = await fetch(`https://${apiDomain}/api?module=contract&action=getabi&address=${targetAddress}&apikey=YourApiKeyToken`);
+            const data = await res.json();
+            
+            if(data.status === "1") {
+                log('ABI DECRYPTED. CHECK SYSTEM LOGS FOR VECTORS.', 'suc');
+                let found = false;
+                JSON.parse(data.result).forEach(item => {
+                    if(item.type === 'function' && (item.name.toLowerCase().includes('mint') || item.stateMutability === 'payable')) {
+                        const inputs = item.inputs.map(i => i.type).join(',');
+                        log(`VECTOR FOUND: ${item.name}(${inputs})`, 'warn');
+                        document.getElementById('mintFuncSelect').value = `${item.name}(${inputs})`;
+                        found = true;
+                    }
+                });
+                if(!found) log('NO STANDARD VECTORS FOUND. USE MANUAL OVERRIDE.', 'warn');
+            } else { log('ERR: SOURCE UNVERIFIED. INPUT FUNCTION MANUALLY.', 'warn'); }
+        } catch(e) { log(`ERR: SCAN FAILED. ${e.message}`, 'err'); }
+    }
+
+    async function executeMint() {
+        if(!wallet || !targetAddress) return log('ERR: INCOMPLETE PARAMETERS.', 'err');
+
+        const funcSig = document.getElementById('mintFuncSelect').value;
+        const qty = parseInt(document.getElementById('mintQuantity').value || 1);
+        const pricePerNft = parseFloat(document.getElementById('mintPrice').value || 0);
+        const valueWei = ethers.parseEther((pricePerNft * qty).toString());
+        
+        let data = "0x";
+        try {
+            const iface = new ethers.Interface([`function ${funcSig} public payable`]);
+            const funcName = funcSig.split('(')[0];
+            let args = [];
+            const inputTypes = funcSig.split('(')[1].split(')')[0].split(',');
+            if(inputTypes[0] === 'uint256') args.push(qty);
+            if(inputTypes[1] === 'bytes32[]') args.push([]); 
+            data = inputTypes[0] !== '' ? iface.encodeFunctionData(funcName, args) : iface.encodeFunctionData(funcName, []);
+        } catch(e) { return log(`ERR: PAYLOAD ENCODE FAILED`, 'err'); }
+
+        const tx = { to: targetAddress, value: valueWei, data: data };
+
+        try {
+            log('INITIATING LOCAL SIMULATION...', 'info');
+            const estGas = await provider.estimateGas({ from: wallet.address, ...tx });
+            tx.gasLimit = (estGas * 120n) / 100n;
+            log(`SIMULATION PASSED. BROADCASTING...`, 'sys');
+            const res = await wallet.sendTransaction(tx);
+            log(`TX BROADCASTED -> HASH: ${res.hash.substring(0,10)}...`, 'suc');
+            const receipt = await res.wait();
+            log(`TX MINED IN BLOCK: ${receipt.blockNumber}`, 'suc');
+            loadWallet();
+        } catch(e) { log(`TX REVERTED -> ${e.reason || e.message}`, 'err'); }
+    }
+</script>
+</body>
+</html>

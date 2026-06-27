@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+
+  /* Palette: "cold storage" — deep slate-blue, not pure black. Signal colors are
+     a warm amber (speed/heat) and a signal-green reserved ONLY for confirmations.
+     This is deliberately not the near-black + acid-green default. */
+  --bg-0: #0B0E14;          /* deepest */
+  --bg-1: #11151E;          /* panel base */
+  --bg-2: #161B26;          /* raised */
+  --line: #232A38;          /* hairline */
+  --line-2: #2E3749;        /* stronger */
+  --ink-0: #EAEEF5;         /* primary text */
+  --ink-1: #98A2B8;         /* secondary */
+  --ink-2: #5C6678;         /* muted */
+
+  --amber: #F5A623;         /* heat / speed / primary action */
+  --amber-dim: #8a5e15;
+  --ice: #4DA6FF;           /* info / chain / links */
+  --signal: #34D399;        /* confirmations ONLY */
+  --alert: #F0563A;         /* errors / danger */
+  --violet: #8B7CF6;        /* allowlist / special */
+}
+
+* { box-sizing: border-box; }
+html, body { padding: 0; margin: 0; background: var(--bg-0); color: var(--ink-0); }
+body {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(1200px 600px at 80% -10%, rgba(77,166,255,0.05), transparent 60%),
+    radial-gradient(900px 500px at 0% 110%, rgba(245,166,35,0.04), transparent 55%);
+  background-attachment: fixed;
+}
+
+.mono { font-family: var(--font-mono); font-feature-settings: "tnum" 1, "zero" 1; }
+.display { font-family: var(--font-display); }
+
+/* Panels: subtle, single source of elevation. No heavy glassmorphism. */
+.panel {
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.panel-raised { background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; }
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+/* Hairline tick row used as a structural motif (like a gauge face) */
+.ticks { background-image: repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 16px); height: 8px; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 8px; border: 2px solid var(--bg-0); }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-2); }
+
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-2) 25%, var(--line) 37%, var(--bg-2) 63%);
+  background-size: 400% 100%; animation: shimmer 1.4s ease infinite; border-radius: 8px;
+}
+@keyframes shimmer { 0% { background-position: 100% 0 } 100% { background-position: -100% 0 } }
+
+.statusdot { width: 7px; height: 7px; border-radius: 99px; display: inline-block; box-shadow: 0 0 0 3px rgba(255,255,255,0.04); }
+
+input, select, textarea { font-family: var(--font-mono); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+/* Compatibility aliases for components still using older class names.
+   Mapped to the cold-storage system so everything stays cohesive. */
+.glass { background: var(--bg-1); border: 1px solid var(--line); border-radius: 14px; }
+.glow-acid { box-shadow: 0 0 0 1px rgba(245,166,35,0.35), 0 0 32px -8px rgba(245,166,35,0.45); }
+.grain::before { content: none; }

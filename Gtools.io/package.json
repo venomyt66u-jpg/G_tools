@@ -1,0 +1,33 @@
+{
+  "name": "g_tools",
+  "version": "1.0.0",
+  "private": true,
+  "description": "G_Tools - single-user NFT minting & wallet management. Runs locally; keys never leave your machine.",
+  "scripts": {
+    "dev": "next dev -H 0.0.0.0",
+    "build": "next build",
+    "start": "next start -H 0.0.0.0"
+  },
+  "dependencies": {
+    "@opensea/sdk": "^11.1.0",
+    "better-sqlite3": "^11.7.0",
+    "clsx": "^2.1.1",
+    "ethers": "^6.13.4",
+    "framer-motion": "^11.11.0",
+    "lucide-react": "^0.460.0",
+    "next": "16.2.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "viem": "^2.51.3",
+    "zustand": "^5.0.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.0"
+  }
+}
